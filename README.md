@@ -6,4 +6,4 @@
 #### C++ server client 통신, 보고서 담당 : 김민준
 #### DB연동, coding 총괄, 영상 편집 담당 : 이창준
 
-#### thread는 미확정
+##### thread는 미확정
