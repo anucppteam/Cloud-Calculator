@@ -1,0 +1,41 @@
+
+
+
+클라이언트
+bind()
+
+while(1)	
+	recieve(
+	if packet data equals(exit ==)
+	break
+	input >>
+	send
+//로그인
+
+서버
+
+listen()
+accept()
+send(main menu)
+while(1)
+	recv
+	switch(input data)
+		case 1: log
+			func
+			send + menu
+			continue
+		case 2: mul
+			func
+			send
+			continue
+		case 3:  exit
+			send(exit)
+			
+DB table
+
+식, 결과 값, 시간
+(* 2 3), (6), (date)
+
+log
+
+다 저장한다.
