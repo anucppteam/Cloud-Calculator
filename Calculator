@@ -1,0 +1,68 @@
+#include<iostream>
+#include<math.h>
+using namespace std;
+int Factorial(int num)
+{
+    if (num <= 1)
+	return num;
+	else
+    return num=num * Factorial(num-1);
+}
+
+int main(){
+	char c;
+	int a,b,p,i;
+	double res;
+	while(1){
+	cout<<"어떠한 연산을 하시겠습니까?";
+	cin>>c;
+	if((c=='+')||(c=='-')||(c=='*')||(c=='/')||(c=='s')){
+	cout<<"a와 b의 값 입력:";
+	cin>>a>>b;
+	switch(c){
+		case '+':res=a+b;
+					cout<<res<<endl;
+			break;
+		case '-':res=a-b;
+					cout<<res<<endl;
+			break;
+		case '*':res=a*b;
+					cout<<res<<endl;
+			break;
+		case '/':res=a/b;
+					cout<<res<<endl;
+			break;
+		case 's':
+			for(i=a;i<=b;i++){
+				res+=i;
+			}
+				cout<<res<<endl;
+			break;
+			default:cout<<"error"<<endl;
+		}
+	}
+	else{
+		cout<<"a 값 입력";
+		cin>>a;
+		if(c=='p'){
+			cout<<"제곱수 입력";
+			cin>>p;
+		}
+		switch(c){
+			case '!':
+				res=Factorial(a);
+				cout<<res<<endl;
+				break;
+			case 'r':
+				res=sqrt(a);
+				cout<<res<<endl;
+				break;
+			case 'p':
+				res=pow(a,p);
+				cout<<res<<endl;
+				break;
+			default:cout<<"error"<<endl;
+			}
+		}
+	}
+}
