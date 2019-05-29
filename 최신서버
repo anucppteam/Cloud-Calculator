@@ -1,0 +1,187 @@
+#include <iostream>
+#include <mysql.h>
+#include <winsock2.h>
+#include <string.h>
+#include <Windows.h>
+#include <math.h>
+#pragma comment(lib, "libmariadb.lib")
+#pragma comment(lib, "ws2_32")
+
+using namespace std;
+
+#define MYSQLUSER "root"
+#define MYSQLPASS "asdf1020"
+#define MYSQLIP "localhost"
+#define PORT 4567
+#define PACKET_SIZE 1024
+
+int Factorial (int num) {
+	if (num <= 1)
+		return num;
+	else
+		return num = num * Factorial(num - 1);
+}
+
+void Connect(const char sqlip[], MYSQL* conn)
+{
+	if (conn == NULL) {
+		fprintf(stderr, "%s\n", mysql_error(conn));
+		Sleep(1000);
+		exit(1);
+	}
+	if (!(mysql_real_connect(conn, MYSQLIP, MYSQLUSER, MYSQLPASS, "test", 5555, NULL, 0) == NULL)) //mysql서버로 연결 성공하면 0 아니면 다른수 반환
+	{
+		mysql_set_character_set(conn, "euckr");            //MySQL 문자를 지정한다. 만약 안하면 한글이 짤림.
+	}
+	else {
+		fprintf(stderr, "연결 오류 : %s\n", mysql_error(conn));
+		exit(1);
+	}
+}
+
+string Main_Menu() {
+	return  "---------------------1. Calculate   2. log   3. exit  4. delete---------------------";	
+}
+
+string Load(MYSQL* conn) {
+	char Buffer[PACKET_SIZE] = {};
+	MYSQL_RES* sql_result;
+	MYSQL_ROW sql_row; // = char **sql_row; 2차원 배열 = 1차원 문자열 배열
+	mysql_query(conn, "select * from test.info LIMIT 10");
+	sql_result = mysql_store_result(conn);
+	while (sql_row = mysql_fetch_row(sql_result)) { //값이 없을때까지 변환함
+		cout << sql_row[1] << " " << sql_row[2] << " " << sql_row[3] << endl;
+		for (int i = 1; i < 4; i++) {
+			strcat_s(Buffer, sql_row[i]);
+			strcat_s(Buffer, " ");
+		}
+		strcat_s(Buffer, "\n");
+	}
+	mysql_free_result(sql_result);
+	return Buffer;
+}
+
+void Insert(MYSQL* conn, string form, float result, string IP) {
+	char query[255];
+	sprintf_s(query, "INSERT INTO `test`.`info` (`Form`, `Result`, `IP`) VALUES ('%s', '%f', '%s');", form.c_str(), result, IP.c_str());
+	mysql_query(conn, query);
+}
+
+void Delete_D(MYSQL* conn, string IP) {
+
+	char query[255];
+
+	sprintf_s(query, "DELETE FROM `test`.`info` WHERE Num = %s", IP.c_str());
+	mysql_query(conn, query);
+
+}                                                                            //사용하기엔 뭔가 좀 그래서 통째로 집어넣었다만.... 그냥 함수로 만들걸 그랬나...
+ 
+int main()
+{
+
+	MYSQL* conn = mysql_init(NULL);
+	Connect(MYSQLIP, conn);
+	char Buffer[PACKET_SIZE] = {};
+
+		while (true)
+		{
+
+	
+		/////////////////////이식////////////////////////////
+		WSADATA wsaData;//Windows의 소켓 초기화 정보를 저장하기위한 구조체
+		WSAStartup(MAKEWORD(2, 2), &wsaData); //WSAStartup(소켓버전, WSADATA 구조체 주소)
+
+		SOCKET hlisten;//운영체제가 관리하는 커널이라는 특수한 영역에 존재하는 기능
+		hlisten = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);//PF_INET6을 쓰면 IPv6를 사용하겠다는 것이다. ,SOCK_DGAM을 쓰면 UDP/IP프로토콜을 사용하겠다는 것이다.
+
+		SOCKADDR_IN tListenAddress = {};//Windows 소켓에서 소켓을 연결할 로컬 또는 원격 주소를 지정하는 데 사용된다.
+		tListenAddress.sin_family = AF_INET;//반드시 AF_INET이어야한다.
+		tListenAddress.sin_port = htons(PORT);//host to network short
+		tListenAddress.sin_addr.s_addr = htonl(INADDR_ANY);//host to network long, 빅엔디안-리틀엔디안과 관련이 있다.
+
+		bind(hlisten, (SOCKADDR*)& tListenAddress, sizeof(tListenAddress));//bind(소켓, 소켓 구성요소 구조체의 주소, 그 구조체의 크기)
+		listen(hlisten, SOMAXCONN);//접속 승인만 해준다.
+		SOCKADDR_IN ClientAddress = {};
+		int ClientSize = sizeof(ClientAddress);
+		SOCKET Client = accept(hlisten, (SOCKADDR*)& ClientAddress, &ClientSize);//accept(소켓, 소켓 구성요소 주소체의 주소, 그 구조체의 크기를 담고있는 변수의 주소)
+		//////////////////////////////////////////////////////////
+		send(Client, Main_Menu().c_str(), strlen(Main_Menu().c_str()), 0);
+		while (true) {
+		
+			memset(Buffer, 0, sizeof(Buffer));
+			recv(Client, Buffer, PACKET_SIZE, 0);
+			switch (Buffer[0])
+			{
+			case '1' :
+				memset(Buffer, 0, sizeof(Buffer));
+				strcat_s(Buffer, Load(conn).c_str());
+				strcat_s(Buffer, Main_Menu().c_str());
+				send(Client, Buffer, strlen(Buffer), 0);
+				continue;
+			case '2':
+				char c;
+				int a, b, p, i;
+				double res;
+				while (1) {
+					switch (c) {
+					case '+':res = a + b;
+						cout << res << endl;
+						break;
+					case '-':res = a - b;
+						cout << res << endl;
+						break;
+					case '*':res = a * b;
+						cout << res << endl;
+						break;
+					case '/':res = a / b;
+						cout << res << endl;
+						break;
+					case 's':
+						for (i = a; i <= b; i++) {
+							res += i;
+						}
+						cout << res << endl;
+						break;
+					case '!':
+						res = Factorial(a);
+						cout << res << endl;
+						break;
+					case 'r':
+						res = sqrt(a);
+						cout << res << endl;
+						break;
+					case 'p':
+						res = pow(a, p);
+						cout << res << endl;
+						break;
+					default:cout << "error" << endl;
+
+					}
+				}
+				
+				continue;
+				/**/
+				//      case 3: Update(conn);                                                //update는 미구현
+				//         continue;
+			case '3':
+				Delete_D(conn, ClientAddress.sin_addr.s_addr);
+				continue;*/
+			case '4': cout << "Good bye";
+				break;
+			default: 
+				memset(Buffer, 0, sizeof(Buffer));
+				strcat_s(Buffer,"Wrong Input\n");
+				send(Client, Buffer, strlen(Buffer), 0);
+				recv(Client, Buffer, PACKET_SIZE, 0);
+				continue;
+			}
+			break;
+		}
+		/////////////이식///////////////////
+		closesocket(Client);
+		closesocket(hlisten);
+		//////////////////////////////
+	}//while(
+
+	mysql_close(conn);
+}
