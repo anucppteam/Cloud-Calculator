@@ -1,0 +1,59 @@
+#include <stdio.h>
+#include <WinSock2.h>
+#include <exception>
+#include <string.h>
+#include <iostream>
+
+
+#pragma comment(lib, "ws2_32")
+#pragma warning(disable : 4996)
+
+#define PORT 4567
+#define PACKET_SIZE 1024
+#define SERVER_IP "220.69.240.150"
+
+using namespace std;
+
+int main() {
+	try {
+		WSADATA wsaData;
+		WSAStartup(MAKEWORD(2, 2), &wsaData);
+
+		SOCKET Socket;
+		Socket = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
+
+		SOCKADDR_IN Addr = {};
+		Addr.sin_family = AF_INET;
+		Addr.sin_port = htons(PORT);
+		Addr.sin_addr.s_addr = inet_addr(SERVER_IP);
+
+		connect(Socket, (SOCKADDR*)& Addr, sizeof(Addr));
+
+		char Message[PACKET_SIZE] = {};
+		char Buffer[PACKET_SIZE] = {};
+		//recv(Socket, Buffer, PACKET_SIZE, 0);
+		//printf("Recv Massge : %s\n", Buffer);
+
+		while (1) {
+			memset(Buffer, 0, sizeof(Buffer));
+			recv(Socket, Buffer, PACKET_SIZE, 0);
+			printf("%s\n", Buffer);
+			if (strcmp(Buffer, "exit") == 0) {
+				break;
+			}
+			else {
+				scanf("%s", Message);
+				send(Socket, Message, strlen(Message), 0);
+				system("cls");
+			}
+		}
+		//
+		closesocket(Socket);
+		WSACleanup();
+		getchar();
+		return 0;
+	}
+	catch (exception e) {
+		printf("%s", e);
+	}
+}
